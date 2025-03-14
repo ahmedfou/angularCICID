@@ -1,59 +1,111 @@
-# AngularCICD
+# Angular CI/CD Pipeline with Jenkins
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.3.
+This repository demonstrates how to set up a **Continuous Integration and Continuous Deployment (CI/CD)** pipeline for an Angular application using **Jenkins**. The pipeline includes steps for linting, building, testing, and deploying the Angular application.
 
-## Development server
+---
 
-To start a local development server, run:
+## Prerequisites
 
-```bash
-ng serve
-```
+Before setting up the pipeline, ensure the following are installed and configured:
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+1. **Jenkins**: Installed and running.
+2. **Node.js**: Installed on the Jenkins server.
+3. **Angular CLI**: Installed globally on the Jenkins server.
+4. **Git**: A Git repository containing your Angular project.
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Steps to Set Up the Pipeline
 
-```bash
-ng generate component component-name
-```
+### 1. Install Required Jenkins Plugins
+Install the following Jenkins plugins:
+- **NodeJS Plugin**: To manage Node.js installations.
+- **Pipeline**: To create and manage Jenkins pipelines.
+- **Git Plugin**: To integrate with Git repositories.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### 2. Configure Node.js in Jenkins
+1. Go to **Manage Jenkins** > **Global Tool Configuration**.
+2. Add a new Node.js installation:
+   - Name: `NodeJS` (or any name you prefer).
+   - Version: Choose a stable LTS version (e.g., 18.x or 20.x).
 
-```bash
-ng generate --help
-```
+### 3. Create a Jenkins Pipeline
+1. Go to the Jenkins dashboard and click on **New Item**.
+2. Enter a name for your pipeline (e.g., `Angular-CI-CD`).
+3. Select **Pipeline** and click **OK**.
 
-## Building
+### 4. Configure the Pipeline
+1. In the pipeline configuration page, scroll down to the **Pipeline** section.
+2. In the **Definition** dropdown, select **Pipeline script from SCM**.
+3. Choose **Git** as the SCM.
+4. Enter the repository URL and credentials if needed.
+5. In the **Script Path**, enter the path to your `Jenkinsfile` (e.g., `Jenkinsfile`).
+6. Save the configuration.
 
-To build the project run:
+---
 
-```bash
-ng build
-```
+## Jenkinsfile
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Create a `Jenkinsfile` in the root of your Angular project. This file defines the pipeline stages.
 
-## Running unit tests
+```groovy
+pipeline {
+    agent any
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+    tools {
+        nodejs 'NodeJS' // Name of the Node.js installation configured in Jenkins
+    }
 
-```bash
-ng test
-```
+    environment {
+        ANGULAR_CLI = 'ng'
+    }
 
-## Running end-to-end tests
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-repo/your-angular-app.git'
+            }
+        }
 
-For end-to-end (e2e) testing, run:
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
 
-```bash
-ng e2e
-```
+        stage('Lint') {
+            steps {
+                sh 'npm run lint'
+            }
+        }
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+        stage('Build') {
+            steps {
+                sh 'npm run build -- --prod'
+            }
+        }
 
-## Additional Resources
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+        }
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+        stage('Deploy') {
+            steps {
+                // Add your deployment steps here
+                // For example, deploying to a server or cloud platform
+                sh 'echo "Deploying to production..."'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
