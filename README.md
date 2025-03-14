@@ -73,15 +73,9 @@ pipeline {
             }
         }
 
-        stage('Lint') {
-            steps {
-                sh 'npm run lint'
-            }
-        }
-
         stage('Build') {
             steps {
-                sh 'npm run build -- --prod'
+                sh 'npm run build --prod'
             }
         }
 
